@@ -58,3 +58,31 @@ No se modificaron otros proyectos ni gubia.mx/DNS.
 5. Confirmar Vercel, conectar repositorio y variables por canal seguro.
 6. Configurar OWNER cuando el usuario indique correo.
 7. Ejecutar E2E integral, revisión de logs, RLS completa y responsive antes de declarar producción.
+
+## Actualización posterior: seguridad de aplicación y build
+
+Este apartado sustituye las observaciones anteriores relativas al entorno desconectado, dependencias, build y autorización de marketing; los demás pendientes siguen vigentes.
+
+- El entorno se recuperó. Dependencias actualizadas y fijadas: Next.js 16.3.6, React/React DOM 19.3.0, Supabase SSR 0.12.7 y supabase-js 2.117.2. Se añadió lockfile y marcador server-only.
+- Se corrigió la incompatibilidad TypeScript del callback de cookies con la antigua versión SSR; los redirects conservan cookies y usan Cache-Control privado/no-store.
+- Servidor y navegación comprueban usuario, perfil activo y permisos. Crear campañas/promociones exige marketing:write, incluso cuando se invoca la Server Action directamente.
+- Entradas de promociones validadas: código sin normalización destructiva, nombres/longitudes, fechas reales y ordenadas, descuento válido, UUID de campaña y límites enteros. Errores de base de datos no se muestran literalmente al usuario.
+- Dashboard reemplaza la tasa de conversión incorrecta por recuentos exactos con permisos. Falla explícitamente ante errores de datos. NO es aún el dashboard empresarial completo solicitado.
+- Cabeceras anti-framing, no-sniff, privacidad de referrer, permisos de dispositivos, CSP básica y HSTS añadidas. La CSP es parcial: no se afirma cobertura completa de script-src/nonce.
+- Instalación limpia con npm ci --ignore-scripts completada. Después pasaron 7 pruebas unitarias, TypeScript y build de producción.
+- npm audit --omit=dev: 0 vulnerabilidades reportadas. No equivale a auditoría completa de seguridad de la aplicación.
+- Runtime local: /admin y /admin/codigos respondieron 307 hacia /login sin sesión; Cache-Control private,no-store y cabeceras verificadas.
+- Verificación visual NO completada: agent-browser falló dos veces al iniciar su daemon. No se afirma responsive ni navegación autenticada verificados.
+- Vercel deploy_to_vercel devolvió Tool deploy_to_vercel not found. Se requiere una vía de administración de Vercel funcional; el navegador necesita autorización de fallback antes de usarse para este servicio.
+- Cuenta OWNER sigue pendiente por elección del usuario. No se enviaron correos ni invitaciones.
+
+| Funcionalidad | Estado | Prueba | Resultado | Observaciones |
+| --- | --- | --- | --- | --- |
+| Recursión de perfiles | Corregida | SQL bajo rol authenticated | PASS | Migración aplicada solo a GUBIA |
+| Lectura clínica por roles | Parcial verificada | Fixtures para 5 perfiles + anónimo | PASS | Falta suite completa de escrituras |
+| Validación de promociones | Implementada | 7 tests unitarios de permisos/entradas | PASS | Falta creación autenticada E2E |
+| Protección anónima de admin | Verificada localmente | HTTP /admin y /admin/codigos | 307 /login | Falta prueba del login OWNER |
+| Compilación | Verificada | TypeScript + next build | PASS | No equivale a producción |
+| QR y atribución | Incompleta | Inspección del código | No aprobada | Falta ruta de tracking |
+| Disponibilidad y reservas | Incompleta | Inspección de RPC/UI | No aprobada | P0 de validación y abuso pendientes |
+| Vercel/producción | Bloqueada | Conector | Sin proyecto/deploy | No hay URL de producción verificada |

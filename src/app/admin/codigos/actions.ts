@@ -1,1 +1,27 @@
-"use server";import {createClient} from "@/lib/supabase/server";import {revalidatePath} from "next/cache";export async function createPromo(f:FormData){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)throw new Error("Inicia sesión para crear promociones");const raw=String(f.get("code")||"").trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"");if(raw.length<3)throw new Error("Código inválido");const {error}=await s.from("promo_codes").insert({code:raw,name:String(f.get("name")),description:String(f.get("description")||"")||null,discount_type:String(f.get("discount_type")),discount_value:Number(f.get("discount_value")||0),starts_at:f.get("starts_at")?new Date(String(f.get("starts_at"))).toISOString():null,ends_at:f.get("ends_at")?new Date(String(f.get("ends_at"))).toISOString():null,usage_limit:f.get("usage_limit")?Number(f.get("usage_limit")):null,campaign_id:f.get("campaign_id")||null,status:"active"});if(error)throw new Error(error.message);revalidatePath("/admin/codigos")}export async function createCampaign(f:FormData){const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)throw new Error("Inicia sesión");const {error}=await s.from("campaigns").insert({name:String(f.get("name")),description:String(f.get("description")||"")||null,starts_at:f.get("starts_at")?new Date(String(f.get("starts_at"))).toISOString():null,ends_at:f.get("ends_at")?new Date(String(f.get("ends_at"))).toISOString():null,active:true});if(error)throw new Error(error.message);revalidatePath("/admin/codigos")}
+"use server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { requireStaff } from "@/lib/auth";
+import { campaignInput, promoInput, ValidationError } from "@/lib/promo-validation";
+
+function invalid(error: unknown): never {
+  redirect("/admin/codigos?error=" + encodeURIComponent(error instanceof ValidationError ? error.message : "No se pudo guardar. Intenta nuevamente."));
+}
+export async function createPromo(form: FormData) {
+  const { supabase } = await requireStaff("marketing:write");
+  let input: ReturnType<typeof promoInput>;
+  try { input = promoInput(form); } catch (error) { invalid(error); }
+  const { error } = await supabase.from("promo_codes").insert(input);
+  if (error) redirect("/admin/codigos?error=" + encodeURIComponent(error.code === "23505" ? "El código ya existe." : "No se pudo guardar la promoción."));
+  revalidatePath("/admin/codigos");
+  redirect("/admin/codigos?saved=1");
+}
+export async function createCampaign(form: FormData) {
+  const { supabase } = await requireStaff("marketing:write");
+  let input: ReturnType<typeof campaignInput>;
+  try { input = campaignInput(form); } catch (error) { invalid(error); }
+  const { error } = await supabase.from("campaigns").insert({ ...input, active: true });
+  if (error) redirect("/admin/codigos?error=" + encodeURIComponent("No se pudo guardar la campaña."));
+  revalidatePath("/admin/codigos");
+  redirect("/admin/codigos?saved=1");
+}

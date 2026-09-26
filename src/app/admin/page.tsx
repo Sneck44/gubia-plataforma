@@ -1,1 +1,40 @@
-import {createClient} from "@/lib/supabase/server";export default async function Admin(){const s=await createClient();const [a,b,c,e]=await Promise.all([s.from("tracking_events").select("*",{count:"exact",head:true}).eq("event_type","qr_scanned"),s.from("appointments").select("*",{count:"exact",head:true}),s.from("patients").select("*",{count:"exact",head:true}),s.from("tracking_events").select("session_id").eq("event_type","qr_scanned")]);const unique=new Set((e.data||[]).map(x=>x.session_id).filter(Boolean)).size;const conv=unique?Math.round(((b.count||0)/unique)*100):0;const k=[["Escaneos",a.count||0],["Visitantes únicos",unique],["Citas",b.count||0],["Conversión",conv+"%"],["Pacientes",c.count||0]];return <main className="p-6 md:p-10"><div className="flex justify-between"><div><p className="text-sm text-slate-500">Panel administrativo</p><h1 className="text-3xl font-semibold">Dashboard</h1></div><a href="/admin/citas" className="rounded-xl bg-[var(--gubia)] text-white px-5 py-3 h-fit">+ Nueva cita</a></div><div className="grid sm:grid-cols-2 xl:grid-cols-5 gap-4 mt-8">{k.map(([x,y])=><div className="card p-5" key={String(x)}><div className="text-sm text-slate-500">{x}</div><div className="text-3xl font-semibold mt-2">{y}</div></div>)}</div><div className="card p-6 mt-5"><h2 className="font-semibold">Analítica de conversión</h2><p className="text-sm text-slate-500 mt-2">QR → visita → reservación → cita → asistencia. Los indicadores se alimentan de datos registrados.</p></div></main>}
+import { requireStaff } from "@/lib/auth";
+import { can } from "@/lib/access";
+
+export default async function Admin({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { supabase, profile } = await requireStaff();
+  const { error: message } = await searchParams;
+  const cards: [string, number][] = [];
+  const jobs: Promise<void>[] = [];
+  if (can(profile.role, "clinical:read")) {
+    jobs.push((async () => {
+      const [appointments, patients] = await Promise.all([
+        supabase.from("appointments").select("id", { count: "exact", head: true }),
+        supabase.from("patients").select("id", { count: "exact", head: true }),
+      ]);
+      if (appointments.error || patients.error) throw new Error("No se pudieron consultar los registros clínicos.");
+      cards.push(["Citas registradas", appointments.count ?? 0], ["Pacientes registrados", patients.count ?? 0]);
+    })());
+  }
+  if (can(profile.role, "marketing:read")) {
+    jobs.push((async () => {
+      const [scans, completed] = await Promise.all([
+        supabase.from("tracking_events").select("id", { count: "exact", head: true }).eq("event_type", "qr_scanned"),
+        supabase.from("tracking_events").select("id", { count: "exact", head: true }).eq("event_type", "appointment_completed"),
+      ]);
+      if (scans.error || completed.error) throw new Error("No se pudieron consultar los eventos.");
+      cards.push(["Eventos de escaneo", scans.count ?? 0], ["Eventos de cita completada", completed.count ?? 0]);
+    })());
+  }
+  await Promise.all(jobs);
+  cards.sort(([a], [b]) => a.localeCompare(b, "es"));
+  return <main className="p-6 md:p-10">
+    <p className="text-sm text-slate-500">GUBIA · Centro de control</p>
+    <h1 className="text-3xl font-semibold">Actividad registrada</h1>
+    {message && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-4 text-red-700">{message}</p>}
+    <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {cards.map(([label, count]) => <div className="card p-5" key={label}><div className="text-sm text-slate-500">{label}</div><div className="mt-2 text-3xl font-semibold">{count.toLocaleString("es-MX")}</div></div>)}
+    </div>
+    <p className="mt-5 text-sm text-slate-600">Acumulados de los registros disponibles para tu rol. Los eventos no equivalen a personas únicas ni a ingresos.</p>
+  </main>;
+}
