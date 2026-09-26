@@ -1,1 +1,22 @@
-import {requireStaff} from "@/lib/auth";import {notFound} from "next/navigation";const names:Record<string,string>={agenda:"Agenda",citas:"Gestión de citas",pacientes:"Pacientes",codigos:"Códigos QR y promociones",campanas:"Campañas",estudios:"Estudios y paquetes",sucursales:"Sucursales y disponibilidad",reportes:"Reportes",usuarios:"Usuarios y permisos"};export default async function Page({params}:{params:Promise<{section:string}>}){const {section}=await params;if(!names[section])notFound();await requireStaff(section==="usuarios"?"users:manage":["campanas","reportes","codigos"].includes(section)?"marketing:read":"clinical:read");return <main className="p-6 md:p-10"><p className="text-sm text-slate-500">GUBIA · Administración</p><h1 className="text-3xl font-semibold mt-1">{names[section]||section}</h1><div className="card p-6 mt-8"><p className="font-semibold">Módulo conectado</p><p className="text-slate-500 mt-2">Preparado para operar con la base de datos central y permisos del personal.</p></div></main>}
+import { notFound } from "next/navigation";
+import { catalogs } from "@/lib/catalogs";
+import { CatalogPage } from "@/components/catalog-page";
+import { OperationsPage } from "@/components/operations-page";
+import { IntelligencePage } from "@/components/intelligence-page";
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ section: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const { section } = await params;
+  const query = await searchParams;
+  if (Object.hasOwn(catalogs, section))
+    return <CatalogPage section={section} query={query} />;
+  if (["agenda", "citas", "pacientes"].includes(section))
+    return <OperationsPage section={section} query={query} />;
+  if (["conversiones", "no-convertidos", "reportes"].includes(section))
+    return <IntelligencePage section={section} query={query} />;
+  notFound();
+}

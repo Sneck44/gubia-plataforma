@@ -1,1 +1,98 @@
-import {requireStaff} from "@/lib/auth";import {can} from "@/lib/access";import Link from "next/link";import {logout} from "@/app/login/actions";const nav=[["/admin","Dashboard"],["/admin/agenda","Agenda"],["/admin/citas","Citas"],["/admin/pacientes","Pacientes"],["/admin/codigos","Códigos QR"],["/admin/campanas","Campañas"],["/admin/estudios","Estudios"],["/admin/sucursales","Sucursales"],["/admin/reportes","Reportes"],["/admin/usuarios","Usuarios"]];export default async function Layout({children}:{children:React.ReactNode}){const {profile}=await requireStaff();return <div className="min-h-screen md:flex bg-[#f4f6f3]"><aside className="bg-[var(--gubia)] text-white p-6 md:w-64"><Link href="/" className="text-2xl font-bold">GUBIA</Link><p className="text-xs opacity-60 mt-1 mb-6">{profile.full_name||"Personal"} · {profile.role}</p>{nav.filter(([h])=>h==="/admin"||(h==="/admin/usuarios"?can(profile.role,"users:manage"):["/admin/codigos","/admin/campanas","/admin/reportes"].includes(h)?can(profile.role,"marketing:read"):can(profile.role,"clinical:read"))).map(([h,n])=><Link key={h} href={h} className="block rounded-lg px-3 py-2.5 text-sm hover:bg-white/10">{n}</Link>)}<form action={logout} className="mt-8"><button className="w-full rounded-lg border border-white/30 px-3 py-2.5 text-sm">Cerrar sesión</button></form></aside><div className="flex-1">{children}</div></div>}
+import Image from "next/image";
+import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
+import { can, type Permission } from "@/lib/access";
+import { logout } from "@/app/login/actions";
+const navigation: { label: string; items: [string, string, Permission][] }[] = [
+  {
+    label: "Operación",
+    items: [
+      ["agenda", "Agenda", "clinical:read"],
+      ["citas", "Citas", "clinical:read"],
+      ["pacientes", "Pacientes", "clinical:read"],
+    ],
+  },
+  {
+    label: "Catálogos",
+    items: [
+      ["sucursales", "Sucursales", "clinical:read"],
+      ["estudios", "Estudios", "clinical:read"],
+      ["horarios", "Horarios y capacidad", "clinical:read"],
+      ["disponibilidad", "Estudios por sucursal", "clinical:read"],
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      ["codigos", "Promociones", "marketing:read"],
+      ["qr", "Códigos QR", "marketing:read"],
+      ["campanas", "Campañas", "marketing:read"],
+      ["promotores", "Promotores", "marketing:read"],
+    ],
+  },
+  {
+    label: "Inteligencia comercial",
+    items: [
+      ["reportes", "Indicadores y recorrido", "marketing:read"],
+      ["conversiones", "Conversiones", "marketing:read"],
+      ["no-convertidos", "Visitantes sin cita", "marketing:read"],
+    ],
+  },
+];
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { profile } = await requireStaff();
+  return (
+    <div className="min-h-screen bg-[#f4f6f3] lg:flex">
+      <aside className="bg-[var(--gubia)] p-5 text-white lg:w-64 lg:shrink-0">
+        <Link href="/admin" className="text-2xl font-bold tracking-widest">
+          <Image src="/gubia-logo.png" alt="GUBIA Análisis Clínicos" width={126} height={86} className="rounded-lg bg-white p-2"/>
+        </Link>
+        <p className="mt-2 text-sm text-white/75">
+          {profile.full_name || "Personal"} · {profile.role}
+        </p>
+        <details open className="mt-6">
+          <summary className="cursor-pointer text-sm lg:hidden">
+            Menú de administración
+          </summary>
+          <Link
+            href="/admin"
+            className="mt-3 block rounded-lg px-3 py-2 hover:bg-white/10"
+          >
+            Inicio
+          </Link>
+          {navigation.map((group) => {
+            const items = group.items.filter(([, , permission]) =>
+              can(profile.role, permission),
+            );
+            return items.length ? (
+              <nav key={group.label} aria-label={group.label} className="mt-5">
+                <p className="mb-2 text-xs uppercase tracking-wider text-white/60">
+                  {group.label}
+                </p>
+                {items.map(([href, label]) => (
+                  <Link
+                    className="block rounded-lg px-3 py-2 text-sm hover:bg-white/10"
+                    key={href}
+                    href={"/admin/" + href}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </nav>
+            ) : null;
+          })}
+          <form action={logout} className="mt-8">
+            <button className="w-full rounded-lg border border-white/40 px-3 py-3">
+              Cerrar sesión
+            </button>
+          </form>
+        </details>
+      </aside>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}

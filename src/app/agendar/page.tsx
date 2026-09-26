@@ -1,1 +1,47 @@
-import {createClient} from "@/lib/supabase/server";import {book} from "./actions";export default async function Agendar({searchParams}:{searchParams:Promise<{error?:string,promo?:string}>}){const s=await createClient();const q=await searchParams;const [{data:branches},{data:services}]=await Promise.all([s.from("branches").select("id,name").eq("active",true).order("name"),s.from("services").select("id,name,price").eq("active",true).order("name")]);return <main className="min-h-screen bg-[var(--cream)] p-6"><div className="mx-auto max-w-3xl"><a href="/">← GUBIA</a><h1 className="text-4xl font-semibold mt-8">Agendar cita</h1>{q.error&&<div className="mt-5 rounded-xl bg-red-50 p-4 text-red-700">{q.error}</div>}<form action={book} className="card mt-8 p-6 grid gap-5"><select name="branch" required className="rounded-xl border p-3"><option value="">Selecciona sucursal</option>{branches?.map(b=><option value={b.id} key={b.id}>{b.name}</option>)}</select><select name="service" required className="rounded-xl border p-3"><option value="">Selecciona estudio</option>{services?.map(x=><option value={x.id} key={x.id}>{x.name}</option>)}</select><div className="grid md:grid-cols-2 gap-4"><input name="date" type="date" required className="rounded-xl border p-3"/><input name="time" type="time" required className="rounded-xl border p-3"/></div><input name="name" required placeholder="Nombre completo" className="rounded-xl border p-3"/><input name="phone" required placeholder="Teléfono" className="rounded-xl border p-3"/><input name="email" type="email" placeholder="Correo" className="rounded-xl border p-3"/><input name="promo" defaultValue={q.promo||""} placeholder="Código promocional" className="rounded-xl border p-3"/><button className="rounded-xl bg-[var(--gubia)] text-white p-4 font-semibold">Confirmar cita</button></form></div></main>}
+import { createClient } from "@/lib/supabase/server";
+import { Booking } from "./wizard";
+export default async function Agendar() {
+  const db = await createClient();
+  const [branches, services, links] = await Promise.all([
+    db
+      .from("branches")
+      .select("id,name,address,timezone")
+      .eq("active", true)
+      .eq("booking_enabled", true)
+      .order("name"),
+    db
+      .from("services")
+      .select("id,name,price,preparation,duration_minutes")
+      .eq("active", true)
+      .order("name"),
+    db
+      .from("branch_services")
+      .select("branch_id,service_id")
+      .eq("active", true),
+  ]);
+  return (
+    <main className="min-h-screen bg-[var(--cream)] px-5 py-8">
+      <div className="mx-auto max-w-3xl">
+        <a href="/" className="font-bold text-[var(--gubia)]">
+          ← GUBIA
+        </a>
+        <h1 className="mt-7 text-3xl font-semibold">Agenda tu cita</h1>
+        <p className="mt-2 text-slate-600">
+          Selecciona un estudio y un horario disponible.
+        </p>
+        {branches.error || services.error || links.error ? (
+          <p role="alert" className="card mt-6 p-6">
+            No pudimos consultar la agenda. Intenta nuevamente.
+          </p>
+        ) : (
+          <Booking
+            branches={branches.data || []}
+            services={services.data || []}
+            links={links.data || []}
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
+          />
+        )}
+      </div>
+    </main>
+  );
+}

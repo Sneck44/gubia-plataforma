@@ -30,6 +30,7 @@ npm run dev
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto GUBIA |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave publicable, nunca service_role |
 | `NEXT_PUBLIC_APP_URL` | Origen absoluto del despliegue |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Clave pública de Cloudflare Turnstile |
 
 No incluir `.env.local`, contraseñas, sesiones o tokens privados en commits ni logs.
 
@@ -45,9 +46,20 @@ No incluir `.env.local`, contraseñas, sesiones o tokens privados en commits ni 
 
 ## Migraciones y pruebas de base de datos
 
-Las tres primeras migraciones se recuperaron exactamente del historial remoto. La migración `20260926010105` corrige la recursión de perfiles y restringe las lecturas clínicas. Ya se aplicó al proyecto GUBIA; no volver a ejecutarla manualmente allí.
+Las migraciones están reconciliadas con el proyecto GUBIA hasta `20260926135903`. Las tres primeras se recuperaron del historial original; las posteriores corrigen seguridad e implementan el gateway y operaciones. No reaplicar manualmente en GUBIA.
 
-Para una base de pruebas desechable: aplicar las migraciones en orden y ejecutar `supabase/tests/profile_rls.sql` como postgres. La prueba crea fixtures en una transacción y hace ROLLBACK. No es una prueba integral de reservas ni de todos los permisos de escritura.
+En una base desechable, aplicar las migraciones en orden y ejecutar los archivos de `supabase/tests/` como postgres. Crean fixtures dentro de transacciones con ROLLBACK. Las suites cubren permisos, reserva y operaciones; no sustituyen pruebas E2E ni carga concurrente.
+
+## Gateway público
+
+`supabase/functions/gubia-public/index.ts` usa `verify_jwt=false` porque verifica explícitamente la clave publicable y admite solo acciones conocidas. Las RPC del gateway están restringidas a service_role. El secreto de servicio proviene del entorno administrado de Supabase; nunca del frontend.
+
+Reservas cerradas por defecto. Configurar secretos de la Edge Function por canal seguro:
+- `GUBIA_BOOKING_ENABLED=true` solamente después de validar el flujo completo y operación.
+- `TURNSTILE_SECRET_KEY`: secreto de Cloudflare Turnstile.
+- `GUBIA_ALLOWED_HOSTNAMES`: hostnames autorizados según el parser de la función (separados por coma).
+
+Además se requieren sucursales habilitadas, estudios con duración/precio verificados, oferta por sucursal, horarios y capacidad. La clave pública Turnstile se configura en Vercel. No usar claves CAPTCHA de prueba en producción.
 
 ## Despliegue
 
