@@ -10,6 +10,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        <link rel="stylesheet" href="/gubia-design-v2.css" />
+      </head>
       <body>{children}</body>
     </html>
   );

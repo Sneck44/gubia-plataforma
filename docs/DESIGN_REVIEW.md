@@ -23,3 +23,7 @@ Estos cambios no habilitan reservas, no cambian permisos ni sustituyen la config
 - Acceso con cuenta de prueba: aprobado. Búsqueda de sucursales en menú móvil y cierre del menú tras navegar: aprobados.
 - Inspección visual de capturas de portada, login y panel en móvil y escritorio.
 - Limitación: la emulación de tamaños en Chromium no sustituye pruebas en dispositivos físicos Safari/iOS y Android. Reservas no habilitadas; no se crearon pacientes ni citas durante esta revisión.
+
+## Corrección de entrega de estilos
+
+Una captura del preview en iPhone mostró la nueva estructura HTML con estilos incompletos. La compilación correcta por sí sola no comprobaba la apariencia del despliegue protegido. Se separó el diseño de la compilación de utilidades Tailwind en `public/gubia-design-v2.css`, enlazado explícitamente desde el layout con una URL versionada. Al cambiar este archivo en futuras entregas, incrementar la versión de su nombre y actualizar el enlace del layout. No se confirmó la causa exacta de la discrepancia remota porque la conexión Vercel disponible no tiene acceso al despliegue protegido.
