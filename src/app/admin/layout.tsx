@@ -1,3 +1,6 @@
+import { AdminNavigation, MobileDock } from "@/components/admin-navigation";
+import { Icon } from "@/components/icon";
+import { AdminMenu } from "@/components/admin-menu";
 import Image from "next/image";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
@@ -45,54 +48,92 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const { profile } = await requireStaff();
+  const groups = navigation
+    .map((group) => ({
+      label: group.label,
+      items: group.items
+        .filter(([, , permission]) => can(profile.role, permission))
+        .map(([href, label]) => ({
+          href: "/admin/" + href,
+          label,
+          icon: (
+            {
+              agenda: "calendar",
+              citas: "calendar",
+              pacientes: "people",
+              sucursales: "pin",
+              estudios: "layers",
+              horarios: "clock",
+              disponibilidad: "layers",
+              codigos: "tag",
+              qr: "grid",
+              campanas: "layers",
+              promotores: "people",
+              reportes: "chart",
+              conversiones: "chart",
+              "no-convertidos": "people",
+            } as Record<string, string>
+          )[href],
+        })),
+    }))
+    .filter((g) => g.items.length);
   return (
-    <div className="min-h-screen bg-[#f4f6f3] lg:flex">
-      <aside className="bg-[var(--gubia)] p-5 text-white lg:w-64 lg:shrink-0">
-        <Link href="/admin" className="text-2xl font-bold tracking-widest">
-          <Image src="/gubia-logo.png" alt="GUBIA Análisis Clínicos" width={126} height={86} className="rounded-lg bg-white p-2"/>
-        </Link>
-        <p className="mt-2 text-sm text-white/75">
-          {profile.full_name || "Personal"} · {profile.role}
-        </p>
-        <details open className="mt-6">
-          <summary className="cursor-pointer text-sm lg:hidden">
-            Menú de administración
-          </summary>
-          <Link
-            href="/admin"
-            className="mt-3 block rounded-lg px-3 py-2 hover:bg-white/10"
-          >
-            Inicio
+    <div className="admin-shell">
+      <a className="skip-link" href="#panel-content">
+        Ir al contenido
+      </a>
+      <aside className="admin-sidebar">
+        <div className="sidebar-brand">
+          <Link href="/admin" aria-label="GUBIA, inicio del panel">
+            <Image
+              src="/gubia-logo.png"
+              alt="GUBIA Análisis Clínicos"
+              width={116}
+              height={79}
+              priority
+            />
           </Link>
-          {navigation.map((group) => {
-            const items = group.items.filter(([, , permission]) =>
-              can(profile.role, permission),
-            );
-            return items.length ? (
-              <nav key={group.label} aria-label={group.label} className="mt-5">
-                <p className="mb-2 text-xs uppercase tracking-wider text-white/60">
-                  {group.label}
-                </p>
-                {items.map(([href, label]) => (
-                  <Link
-                    className="block rounded-lg px-3 py-2 text-sm hover:bg-white/10"
-                    key={href}
-                    href={"/admin/" + href}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </nav>
-            ) : null;
-          })}
-          <form action={logout} className="mt-8">
-            <button className="w-full rounded-lg border border-white/40 px-3 py-3">
+          <span className="brand-caption">GESTIÓN EMPRESARIAL</span>
+        </div>
+        <AdminMenu>
+          <AdminNavigation groups={groups} />
+          <div className="sidebar-account">
+            <span className="avatar">
+              {(profile.full_name || "G").slice(0, 1)}
+            </span>
+            <div>
+              <strong>{profile.full_name || "Personal"}</strong>
+              <span>
+                {profile.role === "administrador"
+                  ? "Administrador"
+                  : profile.role}
+              </span>
+            </div>
+          </div>
+          <form action={logout}>
+            <button className="logout-button">
+              <Icon name="exit" size={18} />
               Cerrar sesión
             </button>
           </form>
-        </details>
+        </AdminMenu>
       </aside>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="admin-content" id="panel-content" tabIndex={-1}>
+        <header className="panel-topbar">
+          <span>
+            <span className="status-dot" />
+            Espacio de trabajo GUBIA
+          </span>
+          <Link href="/" className="quiet-link">
+            Ver inicio <Icon name="arrow" size={16} />
+          </Link>
+        </header>
+        {children}
+      </div>
+      <MobileDock
+        clinical={can(profile.role, "clinical:read")}
+        marketing={can(profile.role, "marketing:read")}
+      />
     </div>
   );
 }

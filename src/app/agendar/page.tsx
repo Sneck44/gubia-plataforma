@@ -20,7 +20,7 @@ export default async function Agendar() {
       .eq("active", true),
   ]);
   return (
-    <main className="min-h-screen bg-[var(--cream)] px-5 py-8">
+    <main className="public-flow min-h-screen px-5 py-8">
       <div className="mx-auto max-w-3xl">
         <a href="/" className="font-bold text-[var(--gubia)]">
           ← GUBIA

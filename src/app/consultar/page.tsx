@@ -39,7 +39,7 @@ export default function Consultar() {
     }
   }
   return (
-    <main className="min-h-screen bg-[var(--cream)] p-6">
+    <main className="public-flow min-h-screen p-6">
       <section className="card mx-auto mt-8 max-w-xl p-7">
         <a href="/">← GUBIA</a>
         <h1 className="mt-5 text-3xl font-semibold">Consulta tu cita</h1>

@@ -229,7 +229,7 @@ export function Booking({
     );
   return (
     <>
-      <ol className="my-7 flex gap-4 text-sm" aria-label="Pasos de la reserva">
+      <ol className="my-7 flex flex-wrap gap-3 text-sm" aria-label="Pasos de la reserva">
         {["Estudio y sucursal", "Horario", "Datos y confirmación"].map(
           (s, i) => (
             <li

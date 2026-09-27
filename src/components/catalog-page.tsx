@@ -177,7 +177,7 @@ export async function CatalogPage({
                 )}
               </label>
             ))}
-            <div className="flex items-center gap-5 md:col-span-2">
+            <div className="flex flex-wrap items-center gap-5 md:col-span-2">
               <button className="rounded-xl bg-[var(--gubia)] px-6 py-3 font-semibold text-white">
                 Guardar
               </button>
@@ -202,7 +202,8 @@ export async function CatalogPage({
           <button className="rounded-lg border px-5">Buscar</button>
         </form>
       )}
-      <div className="card mt-6 overflow-x-auto">
+      <p className="table-hint">↔ Desliza la tabla para ver todas las columnas.</p>
+      <div className="card mt-6 table-scroll" role="region" aria-label="Tabla del catálogo, desplazamiento horizontal" tabIndex={0}>
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50">
             <tr>
@@ -288,7 +289,7 @@ export async function CatalogPage({
         </table>
       </div>
       <nav
-        className="mt-5 flex items-center justify-between text-sm"
+        className="mt-5 flex flex-wrap gap-3 items-center justify-between text-sm"
         aria-label="Paginación"
       >
         <span>

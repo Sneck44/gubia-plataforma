@@ -221,7 +221,8 @@ export async function IntelligencePage({
           ))}
         </div>
       </section>
-      <div className="card overflow-x-auto">
+      <p className="table-hint">↔ Desliza la tabla para ver todas las columnas.</p>
+      <div className="card table-scroll" role="region" aria-label="Tabla de registros, desplazamiento horizontal" tabIndex={0}>
         <table className="w-full text-left text-sm">
           <thead>
             <tr>

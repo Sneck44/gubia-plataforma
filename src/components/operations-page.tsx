@@ -103,7 +103,8 @@ export async function OperationsPage({
           Filtrar
         </button>
       </form>
-      <div className="card overflow-x-auto">
+      <p className="table-hint">↔ Desliza la tabla para ver todas las columnas.</p>
+      <div className="card table-scroll" role="region" aria-label="Tabla de registros, desplazamiento horizontal" tabIndex={0}>
         <table className="w-full text-left text-sm">
           <thead>
             <tr>
@@ -209,7 +210,7 @@ export async function OperationsPage({
           </tbody>
         </table>
       </div>
-      <div className="mt-5 flex justify-between text-sm">
+      <div className="mt-5 flex flex-wrap gap-3 justify-between text-sm">
         <span>
           {count || 0} registros · página {page}
         </span>
