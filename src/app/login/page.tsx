@@ -56,6 +56,7 @@ export default async function Login({
             </p>
           )}
           <LoginForm />
+          <a href="/recuperar" className="quiet-link">Olvidé mi contraseña</a>
           <div className="login-help">
             <Icon name="shield" size={18} />
             <span>

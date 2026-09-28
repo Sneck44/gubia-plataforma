@@ -66,3 +66,7 @@ Además se requieren sucursales habilitadas, estudios con duración/precio verif
 Importar **el repositorio completo** en Vercel (Next.js, directorio raíz del repositorio), configurar variables en el entorno correspondiente y verificar build, runtime y flujo E2E. No publicar como plataforma terminada mientras existan los bloqueos documentados. No modificar `gubia.mx` ni DNS.
 
 El conector Vercel no devolvió proyectos y la herramienta de despliegue respondió `Tool deploy_to_vercel not found`. Falta resolver la vinculación de Vercel y, por decisión del usuario, configurar la cuenta OWNER más adelante.
+
+## Operación, seguridad e instalación
+
+Ver [Guía de operación y entrega](docs/OPERACION_Y_ENTREGA.md) para agenda, permisos por sucursal, MFA, equipo, reportes, correo transaccional pendiente de activación y pruebas de aceptación de la sucursal piloto. El diseño se entrega desde `public/gubia-design-v3.css` con una URL versionada. Las migraciones de esta entrega están reconciliadas con GUBIA hasta `20260927231427`; no reaplicarlas allí.

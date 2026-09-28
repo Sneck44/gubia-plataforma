@@ -136,7 +136,7 @@ export async function OperationsPage({
                 </tr>
               ) : (
                 <tr className="border-t" key={row.id}>
-                  <td className="p-4 font-mono">{row.folio}</td>
+                  <td className="p-4 font-mono"><Link className="underline" href={"/admin/citas/"+row.id}>{row.folio}</Link></td>
                   <td className="p-4">
                     {row.patients?.full_name}
                     <br />

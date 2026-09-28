@@ -2,16 +2,18 @@
 -- Fixture writes are transaction-scoped and always rolled back on success.
 begin;
 create temporary table security_test_users(label text,id uuid) on commit drop;
+grant select on security_test_users to authenticated;
 insert into security_test_users values ('superadmin',gen_random_uuid()),('marketing',gen_random_uuid()),('recepcion',gen_random_uuid()),('consulta',gen_random_uuid()),('inactive',gen_random_uuid());
 insert into auth.users(id) select id from security_test_users;
 insert into public.profiles(id,role,active) select id,case when label='inactive' then 'superadmin' else label end::public.app_role,label<>'inactive' from security_test_users;
 insert into public.branches(id,name,slug) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','TEST ONLY','test-security-transaction');
+update public.profiles set branch_id='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' where id in(select id from security_test_users where label in ('recepcion','consulta'));
 insert into public.patients(id,full_name) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','TEST ONLY');
 insert into public.appointments(id,folio,patient_id,branch_id,starts_at,ends_at) values ('cccccccc-cccc-4ccc-8ccc-cccccccccccc','TEST-SECURITY-TRANSACTION','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',now()+interval '1 day',now()+interval '1 day 30 minutes');
 select set_config('request.jwt.claim.sub',(select id::text from security_test_users where label='superadmin'),true);
 set local role authenticated;
 do $test$ begin
- if (select count(*) from public.profiles) <> 5 then raise exception 'Profile visibility failed: superadmin'; end if;
+ if (select count(*) from public.profiles where id in(select id from security_test_users)) <> 5 then raise exception 'Profile visibility failed: superadmin'; end if;
  if (select count(*) from public.appointments where id='cccccccc-cccc-4ccc-8ccc-cccccccccccc') <> 1 then raise exception 'Appointment visibility failed: superadmin'; end if;
  if (select count(*) from public.patients where id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb') <> 1 then raise exception 'Patient visibility failed: superadmin'; end if;
 end $test$;

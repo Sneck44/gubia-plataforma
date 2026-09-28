@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 export async function updateAppointment(form: FormData) {
   const { supabase } = await requireStaff("clinical:write");
   const id = String(form.get("id") || "");
+  const target = form.get("detail") === "1" ? "/admin/citas/" + id : "/admin/citas";
   const status = String(form.get("status") || "");
   if (
     !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
@@ -24,7 +25,7 @@ export async function updateAppointment(form: FormData) {
   });
   if (error)
     redirect(
-      "/admin/citas?error=" +
+      target + "?error=" +
         encodeURIComponent(
           error.message === "APPOINTMENT_IN_FUTURE"
             ? "La cita todavía no ha ocurrido."
@@ -33,5 +34,20 @@ export async function updateAppointment(form: FormData) {
     );
   revalidatePath("/admin");
   revalidatePath("/admin/citas");
-  redirect("/admin/citas?saved=1");
+  revalidatePath("/admin/agenda");
+  revalidatePath(target);
+  redirect(target + "?saved=1");
+}
+
+export async function checkIn(form:FormData){
+ const {supabase}=await requireStaff("clinical:write");const id=String(form.get("id")||"");if(!/^[a-f0-9-]{36}$/i.test(id))throw Error("Cita inválida.");
+ const {error}=await supabase.rpc("check_in",{p_id:id});
+ revalidatePath("/admin/agenda");revalidatePath("/admin/citas/"+id);
+ redirect("/admin/citas/"+id+(error?"?error="+encodeURIComponent("No se pudo registrar la llegada. Debe ser una cita activa de hoy."):"?saved=1"));
+}
+export async function reschedule(form:FormData){
+ const {supabase}=await requireStaff("clinical:write");const id=String(form.get("id")||"");const starts=String(form.get("starts_at")||"");if(!/^[a-f0-9-]{36}$/i.test(id)||!Number.isFinite(Date.parse(starts)))throw Error("Solicitud inválida.");
+ const {error}=await supabase.rpc("staff_appointment",{p_id:id,p_starts_at:new Date(starts).toISOString()});
+ revalidatePath("/admin/agenda");revalidatePath("/admin/citas/"+id);revalidatePath("/admin/citas");
+ redirect("/admin/citas/"+id+(error?"?error="+encodeURIComponent("Ese horario ya no está disponible o no tienes permiso. Consulta nuevamente."):"?saved=1"));
 }

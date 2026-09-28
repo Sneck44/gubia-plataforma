@@ -6,7 +6,8 @@ export type Permission =
   | "marketing:read"
   | "marketing:write"
   | "catalog:write"
-  | "users:manage";
+  | "users:manage"
+  | "team:manage";
 const grants: Record<Permission, readonly AppRole[]> = {
   "clinical:read": ["superadmin", "administrador", "recepcion", "consulta"],
   "clinical:write": ["superadmin", "administrador", "recepcion"],
@@ -14,6 +15,7 @@ const grants: Record<Permission, readonly AppRole[]> = {
   "marketing:write": ["superadmin", "administrador", "marketing"],
   "catalog:write": ["superadmin", "administrador"],
   "users:manage": ["superadmin"],
+  "team:manage": ["superadmin", "administrador"],
 };
 export function isRole(value: unknown): value is AppRole {
   return (

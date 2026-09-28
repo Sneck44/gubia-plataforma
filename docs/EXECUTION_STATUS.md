@@ -47,3 +47,11 @@ Las pruebas SQL terminan en rollback; no se conservaron pacientes ni citas de pr
 
 ## Despliegue seguro
 Mantener las reservas cerradas y sucursales deshabilitadas hasta finalizar las comprobaciones. Las migraciones ya aplicadas no deben ejecutarse manualmente otra vez. Consultar README para variables y secretos. No publicar esta rama como producto terminado.
+
+## Entrega de operación profesional — 27/09/2026
+
+Se añadieron agenda diaria/semanal, detalle de citas, llegada, reprogramación, aislamiento clínico por sucursal, gestión limitada de equipo con MFA, configuración TOTP y cambio de contraseña, recuperación preparada, comparativo por sucursal con CSV y barras, historial, preparación de apertura, cancelación pública con clave, calendario y PWA sin caché clínica. Ver `docs/OPERACION_Y_ENTREGA.md` para pruebas, límites y activación.
+
+Se aplicaron las migraciones `20260927230647_professional_operations` y `20260927231427_notification_outbox` exclusivamente a GUBIA. Edge Functions: `gubia-staff` valida usuario y AAL2, `gubia-public` incorpora cancelación, `gubia-notifications` exige un secreto de despacho y está desactivada hasta configurar el envío. Sin secretos de correo, sin tarea programada y sin mensajes enviados. La cuenta temporal conserva su contraseña hasta que el titular la cambie desde Seguridad.
+
+No se declara producción habilitada. Pendientes: datos operativos reales, configuración CAPTCHA/correo/dominio, prueba de restauración, destinatario de monitor externo y aceptación del propietario. No se cambió DNS ni se migró el alojamiento.

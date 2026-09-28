@@ -49,6 +49,11 @@ begin
  if (select count(*) from public.gateway_slots(b,svc,test_day))<>0 then raise exception 'Capacity exceeded';end if;
  if public.gateway_rate_limit('test-'||b::text,1,60) is not true or public.gateway_rate_limit('test-'||b::text,1,60) is not false then raise exception 'Rate limiter';end if;
  if not exists(select 1 from public.audit_logs where entity_id=booked::text and action='INSERT') then raise exception 'Missing audit';end if;
+ begin perform public.gateway_cancel(again->>'folio',repeat('b',64));raise exception 'Cancellation token bypass';exception when others then if sqlerrm<>'NOT_FOUND' then raise;end if;end;
+ perform public.gateway_cancel(again->>'folio',token);
+ perform public.gateway_cancel(again->>'folio',token);
+ if (select status from public.appointments where id=(again->>'appointment_id')::uuid)<>'cancelled' then raise exception 'Cancellation failed';end if;
+ if (select count(*) from public.gateway_slots(b,svc,test_day))<>1 then raise exception 'Cancellation did not release capacity';end if;
 end $test$;
 reset role;
 do $test$ begin

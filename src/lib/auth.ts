@@ -12,7 +12,7 @@ export async function requireStaff(permission?: Permission) {
   if (authError || !user) redirect("/login");
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, full_name, role, active")
+    .select("id, full_name, role, active, branch_id")
     .eq("id", user.id)
     .maybeSingle();
   if (error)
@@ -24,6 +24,9 @@ export async function requireStaff(permission?: Permission) {
       "/login?error=" +
         encodeURIComponent("Tu cuenta no tiene acceso administrativo activo."),
     );
+  const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (assurance.error) throw new Error("No se pudo verificar la seguridad de la sesión.");
+  if (assurance.data.nextLevel === "aal2" && assurance.data.currentLevel !== "aal2") redirect("/seguridad");
   if (permission && !can(profile.role, permission))
     redirect(
       "/admin?error=" +

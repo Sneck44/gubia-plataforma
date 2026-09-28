@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
     const body = JSON.parse(raw);
     if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: 'Solicitud inválida.' }, 400);
     const action = body.action;
-    if (!['slots', 'track', 'book', 'lookup'].includes(action)) return json({ error: 'Acción inválida.' }, 400);
+    if (!['slots', 'track', 'book', 'lookup', 'cancel'].includes(action)) return json({ error: 'Acción inválida.' }, 400);
     // IP is an abuse signal, never an identity. CAPTCHA is independently mandatory for bookings.
     const address = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const { data: allowed, error: limitError } = await db.rpc('gateway_rate_limit', { p_bucket: action + ':' + await hash(address), p_limit: action === 'book' ? 10 : 90, p_seconds: 60 });
@@ -48,6 +48,9 @@ Deno.serve(async (req: Request) => {
       if (body.event === 'qr_scanned' && (typeof body.qr !== 'string' || !/^[a-f0-9]{32}$/.test(body.qr))) return json({ error: 'Código inválido.' }, 400);
       if ((body.branch_id && !uuid(body.branch_id)) || (body.service_id && !uuid(body.service_id))) return json({ error: 'Selección inválida.' }, 400);
       result = await db.rpc('gateway_track', { p_token: token(body.session_token) ? body.session_token : null, p_event: body.event, p_qr: body.qr || null, p_branch: body.branch_id || null, p_service: body.service_id || null });
+    } else if (action === 'cancel') {
+      if (!token(body.management_token) || typeof body.folio !== 'string' || !/^GUB-[A-F0-9]{16}$/.test(body.folio)) return json({error:'Cita no disponible.'},404);
+      result=await db.rpc('gateway_cancel',{p_folio:body.folio,p_token:body.management_token});
     } else if (action === 'lookup') {
       if (!token(body.management_token) || typeof body.folio !== 'string' || !/^GUB-[A-F0-9]{16}$/.test(body.folio)) return json({ error: 'Cita no disponible.' }, 404);
       result = await db.rpc('gateway_lookup', { p_folio: body.folio, p_token: body.management_token });

@@ -7,6 +7,7 @@ import { requireStaff } from "@/lib/auth";
 import { can, type Permission } from "@/lib/access";
 import { logout } from "@/app/login/actions";
 const navigation: { label: string; items: [string, string, Permission][] }[] = [
+  {label: "Administración", items: [["equipo", "Equipo y accesos", "team:manage"], ["preparacion", "Preparar apertura", "catalog:write"], ["auditoria", "Historial de cambios", "catalog:write"], ["notificaciones", "Avisos y recordatorios", "catalog:write"]]},
   {
     label: "Operación",
     items: [
@@ -37,6 +38,7 @@ const navigation: { label: string; items: [string, string, Permission][] }[] = [
     label: "Inteligencia comercial",
     items: [
       ["reportes", "Indicadores y recorrido", "marketing:read"],
+      ["comparativo", "Comparar sucursales", "marketing:read"],
       ["conversiones", "Conversiones", "marketing:read"],
       ["no-convertidos", "Visitantes sin cita", "marketing:read"],
     ],
@@ -58,6 +60,7 @@ export default async function Layout({
           label,
           icon: (
             {
+              equipo: "people", preparacion: "check", auditoria: "shield", notificaciones: "clock",
               agenda: "calendar",
               citas: "calendar",
               pacientes: "people",
@@ -69,7 +72,7 @@ export default async function Layout({
               qr: "grid",
               campanas: "layers",
               promotores: "people",
-              reportes: "chart",
+              reportes: "chart", comparativo: "chart",
               conversiones: "chart",
               "no-convertidos": "people",
             } as Record<string, string>
@@ -110,6 +113,8 @@ export default async function Layout({
               </span>
             </div>
           </div>
+          <Link href="/seguridad" className="quiet-link">Seguridad de mi cuenta</Link>
+          <Link href="/admin/ayuda" className="quiet-link">Ayuda e instalación</Link>
           <form action={logout}>
             <button className="logout-button">
               <Icon name="exit" size={18} />

@@ -5,6 +5,7 @@ begin
  insert into auth.users(id) values(staff),(marketer);
  insert into public.profiles(id,role) values(staff,'recepcion'),(marketer,'marketing');
  insert into public.branches(id,name,slug) values(b,'TEST ONLY','test-'||b::text);
+ update public.profiles set branch_id=b where id=staff;
  insert into public.services(id,name,slug) values(svc,'TEST ONLY','test-'||svc::text);
  insert into public.patients(id,full_name) values(p,'TEST ONLY');
  insert into public.appointments(id,folio,patient_id,branch_id,starts_at,ends_at,status) values(a,'TEST-'||a::text,p,b,now()-interval '1 hour',now()-interval '30 minutes','confirmed');
