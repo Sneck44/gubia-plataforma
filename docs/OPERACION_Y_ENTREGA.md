@@ -33,7 +33,7 @@
 
 ## Activación pendiente — requiere datos o servicios del propietario
 
-- Elegir una sucursal piloto y entregar catálogo de estudios, precios, preparación, duración, horarios y capacidad aprobados. Las sucursales no se habilitaron con valores inventados.
+- Elegir una sucursal piloto y confirmar precios, duración, horarios, capacidad y disponibilidad por sucursal. Las 28 sucursales y 685 estudios únicos del catálogo público oficial ya están cargados; las indicaciones se conservaron, pero los estudios permanecen inactivos porque la fuente no publica los datos comerciales y operativos faltantes.
 - Definir dominio definitivo. Configurar Turnstile, hosts autorizados y habilitación del gateway público después de pruebas integrales.
 - Configurar un proveedor SMTP y autorizar `/auth/callback` en las URL de Supabase. Probar entrega de recuperación al destinatario real. No se enviaron mensajes de prueba a terceros.
 - Definir canal y proveedor de recordatorios (correo/WhatsApp), remitente, consentimiento, costos y política de entrega. Se implementó una cola privada para confirmaciones/cambios, cancelaciones y recordatorios a 24 horas, con hasta tres intentos e idempotencia del proveedor. El envío está desactivado. Requiere remitente verificado, credenciales y programación de ejecución; no se probó entrega real ni seguimiento de rebotes. WhatsApp no está integrado.

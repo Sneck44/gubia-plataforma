@@ -61,6 +61,10 @@ Reservas cerradas por defecto. Configurar secretos de la Edge Function por canal
 
 Además se requieren sucursales habilitadas, estudios con duración/precio verificados, oferta por sucursal, horarios y capacidad. La clave pública Turnstile se configura en Vercel. No usar claves CAPTCHA de prueba en producción.
 
+### Catálogo oficial de referencia
+
+El repositorio conserva en `data/gubia-official-studies.json` una extracción reproducible del catálogo público de `https://www.gubia.mx/estudios.aspx`. La consulta del 28 de septiembre de 2026 encontró 692 filas y 685 estudios únicos. Se importan inactivos: la fuente publica indicaciones, pero no precio, duración ni disponibilidad por sucursal. El script `scripts/import-gubia-official-catalog.mjs` permite regenerar el archivo y la migración a partir de una copia HTML de la página oficial.
+
 ## Despliegue
 
 Importar **el repositorio completo** en Vercel (Next.js, directorio raíz del repositorio), configurar variables en el entorno correspondiente y verificar build, runtime y flujo E2E. No publicar como plataforma terminada mientras existan los bloqueos documentados. No modificar `gubia.mx` ni DNS.
