@@ -1,2 +1,90 @@
 import Link from "next/link";
-export default function Home(){return <main className="min-h-screen bg-[var(--cream)]"><header className="bg-[var(--gubia)] text-white px-6 py-5"><div className="mx-auto max-w-6xl flex items-center justify-between"><div><div className="text-2xl font-semibold tracking-[.18em]">GUBIA</div><div className="text-xs tracking-[.24em] opacity-80">ANÁLISIS CLÍNICOS</div></div><Link href="/admin" className="rounded-full border border-white/30 px-4 py-2 text-sm">Acceso personal</Link></div></header><section className="mx-auto max-w-6xl px-6 py-20 grid gap-10 md:grid-cols-2 items-center"><div><p className="text-[var(--gold)] font-semibold tracking-widest text-sm">CONFIANZA EN CADA RESULTADO</p><h1 className="text-5xl font-semibold leading-tight mt-4">Tu salud, con una experiencia más sencilla.</h1><p className="mt-6 text-lg text-slate-600">Agenda estudios, selecciona sucursal y horario, consulta tu cita y recibe tu folio de confirmación.</p><div className="mt-8 flex gap-3"><Link href="/agendar" className="rounded-xl bg-[var(--gubia)] text-white px-6 py-4 font-semibold">Agendar una cita</Link><Link href="/consultar" className="rounded-xl bg-white border px-6 py-4 font-semibold">Consultar cita</Link></div></div><div className="card p-8"><div className="rounded-2xl bg-[var(--gubia)] p-8 text-white"><p className="opacity-70">Portal del paciente</p><h2 className="text-3xl font-semibold mt-2">Reserva en pocos pasos</h2><div className="mt-8 grid grid-cols-2 gap-4">{["Sucursal","Estudio","Fecha y hora","Confirmación"].map((x,i)=><div key={x} className="rounded-xl bg-white/10 p-4"><span className="text-[var(--gold)]">0{i+1}</span><div className="mt-2">{x}</div></div>)}</div></div></div></section></main>}
+import Image from "next/image";
+import { Icon } from "@/components/icon";
+export default function Home() {
+  return (
+    <main className="welcome-page">
+      <header className="welcome-header">
+        <Image
+          src="/gubia-logo.png"
+          alt="GUBIA Análisis Clínicos"
+          width={146}
+          height={100}
+          priority
+        />
+        <a className="quiet-link" href="https://www.gubia.mx/">
+          Sitio institucional <Icon name="arrow" size={16} />
+        </a>
+      </header>
+      <section className="welcome-intro">
+        <span className="eyebrow">
+          CERCA DE TU SALUD. AL FRENTE DE TU EMPRESA.
+        </span>
+        <h1>
+          Todo conectado.
+          <br />
+          <span>Todo más sencillo.</span>
+        </h1>
+        <p>
+          Un espacio para gestionar GUBIA y acompañar a cada paciente, desde la
+          primera visita hasta su cita.
+        </p>
+      </section>
+      <div className="welcome-options">
+        <section className="owner-panel">
+          <span className="icon-tile light">
+            <Icon name="chart" size={27} />
+          </span>
+          <p className="eyebrow">PROPIETARIO Y PERSONAL</p>
+          <h2>
+            Tu operación,
+            <br />
+            en un solo lugar.
+          </h2>
+          <p>
+            Consulta la agenda, organiza tus sucursales y da seguimiento a tus
+            campañas desde el centro de control.
+          </p>
+          <Link href="/admin" className="button button-white">
+            Entrar al centro de control <Icon name="arrow" />
+          </Link>
+          <span className="panel-footnote">
+            <Icon name="shield" size={15} />
+            Acceso para personal autorizado
+          </span>
+        </section>
+        <section className="patient-panel card">
+          <span className="icon-tile">
+            <Icon name="calendar" size={27} />
+          </span>
+          <p className="eyebrow">PACIENTES</p>
+          <h2>
+            Tu siguiente paso
+            <br />
+            para cuidarte.
+          </h2>
+          <p>
+            Encuentra los estudios y horarios habilitados para reservar, o
+            revisa los detalles de una cita existente.
+          </p>
+          <div className="patient-actions">
+            <Link href="/agendar" className="button button-primary">
+              Agendar una cita <Icon name="arrow" />
+            </Link>
+            <Link href="/consultar" className="button button-secondary">
+              Consultar mi cita
+            </Link>
+          </div>
+          <span className="panel-footnote">
+            <Icon name="clock" size={15} />
+            Ten a la mano tu folio y clave de consulta
+          </span>
+        </section>
+      </div>
+      <footer className="welcome-footer">
+        <span>GUBIA · Análisis Clínicos</span>
+        <a href="https://www.gubia.mx/">Aviso de privacidad de GUBIA</a>
+      </footer>
+    </main>
+  );
+}

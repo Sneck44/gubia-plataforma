@@ -1,1 +1,144 @@
-import Link from "next/link";import {redirect} from "next/navigation";import {createClient} from "@/lib/supabase/server";import {logout} from "@/app/login/actions";const nav=[["/admin","Dashboard"],["/admin/agenda","Agenda"],["/admin/citas","Citas"],["/admin/pacientes","Pacientes"],["/admin/codigos","Códigos QR"],["/admin/campanas","Campañas"],["/admin/estudios","Estudios"],["/admin/sucursales","Sucursales"],["/admin/reportes","Reportes"],["/admin/usuarios","Usuarios"]];export default async function Layout({children}:{children:React.ReactNode}){const s=await createClient();const {data}=await s.auth.getClaims();if(!data?.claims?.sub)redirect("/login");const {data:profile}=await s.from("profiles").select("full_name,role,active").eq("id",data.claims.sub).maybeSingle();if(!profile?.active)redirect("/login?error="+encodeURIComponent("Tu cuenta no tiene acceso administrativo activo."));return <div className="min-h-screen md:flex bg-[#f4f6f3]"><aside className="bg-[var(--gubia)] text-white p-6 md:w-64"><Link href="/" className="text-2xl font-bold">GUBIA</Link><p className="text-xs opacity-60 mt-1 mb-6">{profile.full_name||"Personal"} · {profile.role}</p>{nav.map(([h,n])=><Link key={h} href={h} className="block rounded-lg px-3 py-2.5 text-sm hover:bg-white/10">{n}</Link>)}<form action={logout} className="mt-8"><button className="w-full rounded-lg border border-white/30 px-3 py-2.5 text-sm">Cerrar sesión</button></form></aside><div className="flex-1">{children}</div></div>}
+import { AdminNavigation, MobileDock } from "@/components/admin-navigation";
+import { Icon } from "@/components/icon";
+import { AdminMenu } from "@/components/admin-menu";
+import Image from "next/image";
+import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
+import { can, type Permission } from "@/lib/access";
+import { logout } from "@/app/login/actions";
+const navigation: { label: string; items: [string, string, Permission][] }[] = [
+  {label: "Administración", items: [["equipo", "Equipo y accesos", "team:manage"], ["preparacion", "Preparar apertura", "catalog:write"], ["auditoria", "Historial de cambios", "catalog:write"], ["notificaciones", "Avisos y recordatorios", "catalog:write"]]},
+  {
+    label: "Operación",
+    items: [
+      ["agenda", "Agenda", "clinical:read"],
+      ["citas", "Citas", "clinical:read"],
+      ["pacientes", "Pacientes", "clinical:read"],
+    ],
+  },
+  {
+    label: "Catálogos",
+    items: [
+      ["sucursales", "Sucursales", "clinical:read"],
+      ["estudios", "Estudios", "clinical:read"],
+      ["horarios", "Horarios y capacidad", "clinical:read"],
+      ["disponibilidad", "Estudios por sucursal", "clinical:read"],
+    ],
+  },
+  {
+    label: "Marketing",
+    items: [
+      ["codigos", "Promociones", "marketing:read"],
+      ["qr", "Códigos QR", "marketing:read"],
+      ["campanas", "Campañas", "marketing:read"],
+      ["promotores", "Promotores", "marketing:read"],
+    ],
+  },
+  {
+    label: "Inteligencia comercial",
+    items: [
+      ["reportes", "Indicadores y recorrido", "marketing:read"],
+      ["comparativo", "Comparar sucursales", "marketing:read"],
+      ["conversiones", "Conversiones", "marketing:read"],
+      ["no-convertidos", "Visitantes sin cita", "marketing:read"],
+    ],
+  },
+];
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { profile } = await requireStaff();
+  const groups = navigation
+    .map((group) => ({
+      label: group.label,
+      items: group.items
+        .filter(([, , permission]) => can(profile.role, permission))
+        .map(([href, label]) => ({
+          href: "/admin/" + href,
+          label,
+          icon: (
+            {
+              equipo: "people", preparacion: "check", auditoria: "shield", notificaciones: "clock",
+              agenda: "calendar",
+              citas: "calendar",
+              pacientes: "people",
+              sucursales: "pin",
+              estudios: "layers",
+              horarios: "clock",
+              disponibilidad: "layers",
+              codigos: "tag",
+              qr: "grid",
+              campanas: "layers",
+              promotores: "people",
+              reportes: "chart", comparativo: "chart",
+              conversiones: "chart",
+              "no-convertidos": "people",
+            } as Record<string, string>
+          )[href],
+        })),
+    }))
+    .filter((g) => g.items.length);
+  return (
+    <div className="admin-shell">
+      <a className="skip-link" href="#panel-content">
+        Ir al contenido
+      </a>
+      <aside className="admin-sidebar">
+        <div className="sidebar-brand">
+          <Link href="/admin" aria-label="GUBIA, inicio del panel">
+            <Image
+              src="/gubia-logo.png"
+              alt="GUBIA Análisis Clínicos"
+              width={116}
+              height={79}
+              priority
+            />
+          </Link>
+          <span className="brand-caption">GESTIÓN EMPRESARIAL</span>
+        </div>
+        <AdminMenu>
+          <AdminNavigation groups={groups} />
+          <div className="sidebar-account">
+            <span className="avatar">
+              {(profile.full_name || "G").slice(0, 1)}
+            </span>
+            <div>
+              <strong>{profile.full_name || "Personal"}</strong>
+              <span>
+                {profile.role === "administrador"
+                  ? "Administrador"
+                  : profile.role}
+              </span>
+            </div>
+          </div>
+          <Link href="/seguridad" className="quiet-link">Seguridad de mi cuenta</Link>
+          <Link href="/admin/ayuda" className="quiet-link">Ayuda e instalación</Link>
+          <form action={logout}>
+            <button className="logout-button">
+              <Icon name="exit" size={18} />
+              Cerrar sesión
+            </button>
+          </form>
+        </AdminMenu>
+      </aside>
+      <div className="admin-content" id="panel-content" tabIndex={-1}>
+        <header className="panel-topbar">
+          <span>
+            <span className="status-dot" />
+            Espacio de trabajo GUBIA
+          </span>
+          <Link href="/" className="quiet-link">
+            Ver inicio <Icon name="arrow" size={16} />
+          </Link>
+        </header>
+        {children}
+      </div>
+      <MobileDock
+        clinical={can(profile.role, "clinical:read")}
+        marketing={can(profile.role, "marketing:read")}
+      />
+    </div>
+  );
+}
